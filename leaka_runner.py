@@ -8,8 +8,6 @@ import tempfile
 from typing import Any
 
 from pydantic import SecretStr
-from langchain_openai import ChatOpenAI
-from langchain_anthropic import ChatAnthropic
 from browser_use import Agent
 from browser_use.browser.session import BrowserSession
 
@@ -21,13 +19,13 @@ API_BASE = os.getenv("LEAKA_API_URL", "http://127.0.0.1:8000")
 def pull_job(job_id: str, token: str) -> dict:
     url = f"{API_BASE}/api/runner/v1/jobs/{job_id}/pull"
     logger.info(f"Pulling job {job_id} from {url}")
-    resp = requests.post(url, headers={"X-Runner-Token": token, "Bypass-Tunnel-Reminder": "true"})
+    resp = requests.post(url, headers={"X-Runner-Token": token, "Bypass-Tunnel-Reminder": "true"}, timeout=30)
     resp.raise_for_status()
     return resp.json()
 
 def update_status(job_id: str, token: str, payload: dict):
     url = f"{API_BASE}/api/runner/v1/jobs/{job_id}/status"
-    resp = requests.post(url, headers={"X-Runner-Token": token, "Bypass-Tunnel-Reminder": "true"}, json=payload)
+    resp = requests.post(url, headers={"X-Runner-Token": token, "Bypass-Tunnel-Reminder": "true"}, json=payload, timeout=30)
     resp.raise_for_status()
 
 async def run_job(job_id: str, token: str):
@@ -42,18 +40,21 @@ async def run_job(job_id: str, token: str):
     
     # Configure LLM (Honors standard env vars)
     llm_provider = os.getenv("LLM_PROVIDER", "openai").lower()
+    
     if llm_provider == "anthropic":
+        from browser_use.llm import ChatAnthropic
         llm = ChatAnthropic(
             model_name="claude-3-5-sonnet-20241022",
             api_key=SecretStr(os.getenv("ANTHROPIC_API_KEY", "")),
         )
     elif llm_provider == "openrouter":
-        llm = ChatOpenAI(
-            base_url="https://openrouter.ai/api/v1",
-            api_key=SecretStr(os.getenv("OPENROUTER_API_KEY", "")),
+        from browser_use.llm import ChatOpenRouter
+        llm = ChatOpenRouter(
             model="anthropic/claude-3.5-sonnet", # default openrouter model
+            api_key=SecretStr(os.getenv("OPENROUTER_API_KEY", "")),
         )
     else:
+        from browser_use.llm import ChatOpenAI
         llm = ChatOpenAI(
             model="gpt-4o",
             api_key=SecretStr(os.getenv("OPENAI_API_KEY", "")),
