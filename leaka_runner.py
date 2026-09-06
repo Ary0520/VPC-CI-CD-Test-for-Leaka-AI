@@ -50,7 +50,7 @@ async def run_job(job_id: str, token: str):
     elif llm_provider == "openrouter":
         from browser_use.llm import ChatOpenRouter
         llm = ChatOpenRouter(
-            model="anthropic/claude-3.5-sonnet", # default openrouter model
+            model=os.getenv("LLM_MODEL", "openai/gpt-4o"), # BYOK: Allow passing model in env
             api_key=os.getenv("OPENROUTER_API_KEY", ""),
         )
     else:
