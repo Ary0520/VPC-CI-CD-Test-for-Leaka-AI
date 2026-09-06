@@ -29,6 +29,6 @@ jobs:
         env:
           LLM_PROVIDER: "openrouter"
           OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
-          LEAKA_API_URL: "https://witty-cows-shine.loca.lt" 
+          LEAKA_API_URL: "https://dry-cobra-99.loca.lt" 
         run: |
           xvfb-run python leaka_runner.py --job-id 37a474f7b4e7432e9dda93d109f76bb2 --token leaka_runner_4dd528ce04ac5f29a11e4682510d3645
