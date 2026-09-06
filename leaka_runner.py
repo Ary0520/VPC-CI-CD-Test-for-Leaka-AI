@@ -10,7 +10,8 @@ from typing import Any
 from pydantic import SecretStr
 from langchain_openai import ChatOpenAI
 from langchain_anthropic import ChatAnthropic
-from browser_use import Agent, Browser, BrowserConfig
+from browser_use import Agent
+from browser_use.browser.session import BrowserSession
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger("leaka-runner")
@@ -85,23 +86,22 @@ async def run_job(job_id: str, token: str):
             })
             return
 
-    # Initialize Browser
-    browser = Browser(
-        config=BrowserConfig(
-            headless=False,
-            disable_security=True,
-            extra_chromium_args=[f"--window-size=1920,1080"],
-        )
-    )
+    storage_state_dict = None
+    if auth_state_path and os.path.exists(auth_state_path):
+        with open(auth_state_path, "r") as f:
+            storage_state_dict = json.load(f)
+
+    # Initialize Browser Session
+    browser_session = BrowserSession(headless=False, storage_state=storage_state_dict)
 
     try:
         agent = Agent(
             task=job["prompt"],
             llm=llm,
-            browser=browser,
+            browser_session=browser_session,
             use_vision=True,
             max_actions_per_step=4,
-            validate_output=True,
+            use_thinking=False,
         )
 
         history = await agent.run(max_steps=50)
@@ -142,7 +142,7 @@ async def run_job(job_id: str, token: str):
             "error_message": str(e)
         })
     finally:
-        await browser.close()
+        await browser_session.close()
         if auth_state_path and os.path.exists(auth_state_path):
             os.remove(auth_state_path)
 
