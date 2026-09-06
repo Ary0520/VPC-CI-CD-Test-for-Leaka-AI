@@ -45,19 +45,19 @@ async def run_job(job_id: str, token: str):
         from browser_use.llm import ChatAnthropic
         llm = ChatAnthropic(
             model_name="claude-3-5-sonnet-20241022",
-            api_key=SecretStr(os.getenv("ANTHROPIC_API_KEY", "")),
+            api_key=os.getenv("ANTHROPIC_API_KEY", ""),
         )
     elif llm_provider == "openrouter":
         from browser_use.llm import ChatOpenRouter
         llm = ChatOpenRouter(
             model="anthropic/claude-3.5-sonnet", # default openrouter model
-            api_key=SecretStr(os.getenv("OPENROUTER_API_KEY", "")),
+            api_key=os.getenv("OPENROUTER_API_KEY", ""),
         )
     else:
         from browser_use.llm import ChatOpenAI
         llm = ChatOpenAI(
             model="gpt-4o",
-            api_key=SecretStr(os.getenv("OPENAI_API_KEY", "")),
+            api_key=os.getenv("OPENAI_API_KEY", ""),
         )
 
     # Auth Strategy handling
