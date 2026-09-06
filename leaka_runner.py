@@ -92,8 +92,13 @@ async def run_job(job_id: str, token: str):
         with open(auth_state_path, "r") as f:
             storage_state_dict = json.load(f)
 
-    # Initialize Browser Session
-    browser_session = BrowserSession(headless=False, storage_state=storage_state_dict)
+    # Initialize Browser Session for CI/CD (must be headless with no-sandbox)
+    browser_session = BrowserSession(
+        headless=True, 
+        storage_state=storage_state_dict,
+        chromium_sandbox=False,
+        args=["--no-sandbox", "--disable-dev-shm-usage", "--disable-gpu", "--disable-setuid-sandbox"]
+    )
 
     try:
         agent = Agent(
